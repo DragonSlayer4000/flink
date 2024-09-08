@@ -25,6 +25,8 @@ import org.apache.flink.table.catalog.CommonCatalogOptions;
 import org.apache.flink.table.catalog.hive.HiveCatalog;
 import org.apache.flink.table.catalog.hive.client.HiveShimLoader;
 
+import java.util.Map;
+
 /** {@link ConfigOption}s for {@link HiveCatalog}. */
 @Internal
 public final class HiveCatalogFactoryOptions {
@@ -46,6 +48,9 @@ public final class HiveCatalogFactoryOptions {
 
     public static final ConfigOption<String> HADOOP_CONF_DIR =
             ConfigOptions.key("hadoop-conf-dir").stringType().noDefaultValue();
+
+    public static final ConfigOption<Map<String, String>> HIVE_CONF_PROPERTIES =
+            ConfigOptions.key("hiveConf").mapType().noDefaultValue();
 
     private HiveCatalogFactoryOptions() {}
 }

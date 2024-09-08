@@ -203,6 +203,20 @@ public class HiveCatalog extends AbstractCatalog {
     public HiveCatalog(
             String catalogName,
             @Nullable String defaultDatabase,
+            @Nullable String hiveConfDir,
+            @Nullable String hadoopConfDir,
+            @Nullable String hiveVersion,
+            @Nullable Map<String, String> hiveProperties) {
+        this(
+                catalogName,
+                defaultDatabase,
+                createHiveConf(hiveConfDir, hadoopConfDir, hiveProperties),
+                hiveVersion);
+    }
+
+    public HiveCatalog(
+            String catalogName,
+            @Nullable String defaultDatabase,
             @Nullable HiveConf hiveConf,
             String hiveVersion,
             boolean allowEmbedded) {
@@ -225,8 +239,12 @@ public class HiveCatalog extends AbstractCatalog {
         LOG.info("Created HiveCatalog '{}'", catalogName);
     }
 
+    public static HiveConf createHiveConf(@Nullable String hiveConfDir, @Nullable String hadoopConfDir) {
+        return createHiveConf(hiveConfDir, hadoopConfDir, null);
+    }
+
     public static HiveConf createHiveConf(
-            @Nullable String hiveConfDir, @Nullable String hadoopConfDir) {
+            @Nullable String hiveConfDir, @Nullable String hadoopConfDir, @Nullable Map<String, String> hiveProperties) {
         // create HiveConf from hadoop configuration with hadoop conf directory configured.
         Configuration hadoopConf = null;
         if (isNullOrWhitespaceOnly(hadoopConfDir)) {
@@ -285,7 +303,27 @@ public class HiveCatalog extends AbstractCatalog {
                 hiveConf.addResource(hiveSite);
             }
         }
+        if (hiveProperties != null) {
+            for (String property : hiveProperties.keySet()) {
+                if (isHiveConfPropertyExists(property)) {
+                    String value = hiveProperties.get(property);
+                    LOG.info("Set the value of HiveConf property {} to {}", property, value);
+                    hiveConf.set(property, value);
+                } else {
+                    LOG.warn("Property {} not found in HiveConf configuration.", property);
+                }
+            }
+        }
         return hiveConf;
+    }
+
+    private static boolean isHiveConfPropertyExists(String property) {
+        for (HiveConf.ConfVars conf : HiveConf.ConfVars.values()) {
+            if (conf.varname.equals(property)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public HiveConf getHiveConf() {
